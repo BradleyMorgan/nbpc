@@ -8,6 +8,7 @@ int main(int argc, char * argv[]) {
 	int arr[100];
 
 	for(i=0;i<=100;i++) {
+		srand(time(NULL) * i);
 		arr[i] = rand() % 100;
 	}
 
