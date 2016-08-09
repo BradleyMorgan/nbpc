@@ -1,0 +1,88 @@
+// nbc_test.c
+// Bradley Morgan
+// 12.15.2015
+//
+// A very simple demonstration of
+// nonblocking collectives (libnbc)
+// in MPI.
+//
+// This is basically used to confirm
+// that libnbc has been built and
+// can be instantiated as expected
+//
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include "mpi.h"
+#include "ompi/mca/coll/coll.h"
+
+int main(int argc, char * argv[]) {
+
+	// initialize MPI
+
+	int rank;
+	int arr[100];
+
+	MPI_Init(&argc, &argv);
+	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+	// populate a sample array,
+	// i.e. simulated input
+
+	if(rank == 0) {
+
+		printf("\r\n\r\nHello from r00t. Starting\r\n\r\n");
+
+		int i;
+
+		for(i=0;i<=100;i++) {
+			srand(time(NULL) * i);
+			arr[i] = rand() % 100;
+		}
+
+	}
+
+	MPI_Request req;
+   	MPI_Status status;
+
+    // send our populated array to each process
+    // using a simple nonblocking collective ...
+
+	MPI_Ibcast(arr, 100, MPI_INT, 0, MPI_COMM_WORLD, &req);
+	printf("sending MPI_LIBPNBC_Start()...\n\n");
+	MPI_LIBPNBC_Start(arr, 100, MPI_INT, 0, MPI_COMM_WORLD, &req);
+	//MPI_COMM_WORLD->c_coll.coll_start(1, &req);
+
+	//mca_coll_base_module_t mca_coll;
+	//mca_coll.coll_pnbc_start(1, req->);
+
+	// compare to ...
+	// MPI_Bcast(arr, 100, MPI_INT, 0, MPI_COMM_WORLD);
+
+	// here we can do work that is independent of our
+	// MPI computations...
+
+	printf("*working*\r\n");
+
+	// since we are sending asynchronous requests
+	// a wait is issued to synchronize each process
+	// before we can evaluate our results
+
+	//MPI_Wait(&req, &status);
+
+	if(rank > 0) {
+
+	        printf("My Rank is %d and I drew %d \r\n", rank, arr[rank]);
+
+	}
+
+	MPI_Finalize();
+
+	if(rank == 0) {
+		printf("\r\n\r\nDone\r\n\r\n");
+	}
+
+    	return 0;
+
+}
